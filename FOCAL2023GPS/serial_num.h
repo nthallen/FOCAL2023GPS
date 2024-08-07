@@ -58,6 +58,8 @@
 #define SUBBUS_BOARD_FIRMWARE_REV "V1.0"
 #define SUBBUS_BOARD_BUILD_NUM 1
 // #define HAVE_RTC
+// If we include ser_control.c, it should read from the USB
+#define CTRL_USB_SER
 
 /**
  * Build definitions

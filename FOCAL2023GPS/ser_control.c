@@ -16,10 +16,9 @@
 
 /***************************** Include Files **********************************/
 #include <ctype.h>
+#include "serial_num.h"
 #include "ser_control.h"
 #include "subbus.h"
-#include "serial_num.h"
-#include "usart.h"
 
 /**
  * Reads hex string and sets return value and updates the
@@ -50,12 +49,12 @@ static void hex_out(uint16_t data) {
   if (data & 0xFFF0) {
     if (data & 0xFF00) {
       if (data & 0xF000)
-        uart_send_char(hex[(data>>12)&0xF]);
-      uart_send_char(hex[(data>>8)&0xF]);
+        ctrl_send_char(hex[(data>>12)&0xF]);
+      ctrl_send_char(hex[(data>>8)&0xF]);
     }
-    uart_send_char(hex[(data>>4)&0xF]);
+    ctrl_send_char(hex[(data>>4)&0xF]);
   }
-  uart_send_char(hex[data&0xF]);
+  ctrl_send_char(hex[data&0xF]);
 }
 
 /**
@@ -113,16 +112,16 @@ static void read_multi(uint8_t *cmd) {
     } else if (*cmd == '|') {
 #if USE_SUBBUS
       if ( subbus_read( addr, &result ) ) {
-        uart_send_char('M');
+        ctrl_send_char('M');
         hex_out(result);
       } else {
-        uart_send_char('m');
-        uart_send_char('0');
+        ctrl_send_char('m');
+        ctrl_send_char('0');
         result = 0;
       }
 #else
-      uart_send_char('m');
-      uart_send_char('0');
+      ctrl_send_char('m');
+      ctrl_send_char('0');
       result = 0;
 #endif
       ++cmd;
@@ -156,15 +155,15 @@ static void read_multi(uint8_t *cmd) {
       }
 #if USE_SUBBUS
       if ( subbus_read( addr, &result ) ) {
-        uart_send_char('M');
+        ctrl_send_char('M');
         hex_out(result);
       } else {
-        uart_send_char('m');
-        uart_send_char('0');
+        ctrl_send_char('m');
+        ctrl_send_char('0');
       }
 #else
-      uart_send_char('m');
-      uart_send_char('0');
+      ctrl_send_char('m');
+      ctrl_send_char('0');
 #endif
     }
     if (*cmd == '\n' || *cmd == '\r') {
@@ -309,7 +308,7 @@ static void parse_command(uint8_t *cmd) {
   }
 }
 
-#define RECV_BUF_SIZE USART_CTRL_RX_BUFFER_SIZE
+#define RECV_BUF_SIZE 256
 static uint8_t cmd[RECV_BUF_SIZE];							// Current Command
 static int cmd_nc = 0;
 static int cmd_cp = 0;
@@ -326,7 +325,7 @@ static int cmd_cp = 0;
 *******************************************************************************/
 void poll_control(void) {
     int nr, i;
-    nr = uart_recv(&cmd[cmd_nc], RECV_BUF_SIZE-cmd_nc-1);
+    nr = ctrl_recv(&cmd[cmd_nc], RECV_BUF_SIZE-cmd_nc-1);
     if (nr > 0) {
 #ifdef CMD_RCV_TIMEOUT
       if (cmd_nc == 0) cmd_rcv_timer = 0;
@@ -351,7 +350,7 @@ void poll_control(void) {
       }
       if (cmd_nc >= RECV_BUF_SIZE-1) {
         SendErrorMsg("8"); // Error code 8: Too many bytes before NL
-        uart_flush_input();
+        ctrl_flush_input();
         cmd_nc = 0;
       }
 #ifdef CMD_RCV_TIMEOUT
@@ -372,7 +371,7 @@ void poll_control(void) {
 *
 *******************************************************************************/
 void SendErrorMsg(const char *msg) {
-  uart_send_char('U');
+  ctrl_send_char('U');
   SendMsg(msg);
 }
 
@@ -387,24 +386,24 @@ void SendErrorMsg(const char *msg) {
  */
 void SendMsg(const char *msg) {
   while (*msg)
-    uart_send_char(*msg++);
-  uart_send_char('\n');			// End with NL
-  uart_flush_output();
+    ctrl_send_char(*msg++);
+  ctrl_send_char('\n');			// End with NL
+  ctrl_flush_output();
 }
 
 void SendCodeVal(int8_t code, uint16_t val) {
-  uart_send_char(code);
+  ctrl_send_char(code);
   hex_out(val);
   SendMsg("");
 }
 
 void SendCode(int8_t code) {
-  uart_send_char(code);
+  ctrl_send_char(code);
   SendMsg("");
 }
 
 static void control_reset(void) {
-  uart_init();
+  ctrl_init();
 }
 
 subbus_driver_t sb_control = {

@@ -237,13 +237,13 @@ volatile int sb_acm_tx_busy = 0;
  * Initialization of the usb hardware is handled by the usb
  * device driver.
  */
-void uart_init(void) {
+void usb_ser_init(void) {
   // nc_tx = 0;
   input_length = 0;
   output_length = 0;
 }
 
-int uart_recv(uint8_t *buf, int nbytes) {
+int usb_ser_recv(uint8_t *buf, int nbytes) {
   if (output_length) return 0;
   if (nbytes > 0) {
     CRITICAL_SECTION_ENTER()
@@ -267,17 +267,17 @@ int uart_recv(uint8_t *buf, int nbytes) {
   return nbytes;
 }
 
-void uart_flush_input(void) {
+void usb_ser_flush_input(void) {
   CRITICAL_SECTION_ENTER()
   input_length = 0;
   CRITICAL_SECTION_LEAVE()
 }
 
-void uart_send_char(uint8_t c) {
+void usb_ser_send_char(uint8_t c) {
   cdc_write(&c, 1);
 }
 
-void uart_flush_output(void) {
+void usb_ser_flush_output(void) {
   cdc_flush_output();
 }
 

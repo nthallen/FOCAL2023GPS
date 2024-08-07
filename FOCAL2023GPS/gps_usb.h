@@ -28,6 +28,12 @@ subbus_driver_t sb_usb;
 #define CDC_INPUT_BUFFER_SIZE 256
 #define CDC_OUTPUT_BUFFER_SIZE 256
 
+void usb_ser_init(void);
+int usb_ser_recv(uint8_t *buf, int nbytes);
+void usb_ser_send_char(uint8_t c);
+void usb_ser_flush_input(void);
+void usb_ser_flush_output(void);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

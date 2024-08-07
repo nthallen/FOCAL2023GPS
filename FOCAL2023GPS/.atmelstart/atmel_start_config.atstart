@@ -987,9 +987,9 @@ drivers:
       domain_group: null
   USART_0:
     user_label: USART_0
-    definition: Atmel:SAME51_Drivers:0.0.1::SAME51J19A-MF::SERCOM5::driver_config_definition::UART::HAL:Driver:USART.Sync
+    definition: Atmel:SAME51_Drivers:0.0.1::SAME51J19A-MF::SERCOM5::driver_config_definition::UART::HAL:Driver:USART.Async
     functionality: USART
-    api: HAL:Driver:USART_Sync
+    api: HAL:Driver:USART_Async
     configuration:
       usart_advanced: false
       usart_arch_clock_mode: USART with internal clock
