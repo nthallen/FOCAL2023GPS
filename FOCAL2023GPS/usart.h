@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 /*! The rx buffer size for USART */
-// #define USART_CTRL_RX_BUFFER_SIZE 256
-#define USART_CTRL_TX_BUFFER_SIZE 512
+#define USART_RX_BUFFER_SIZE 256
+#define USART_TX_BUFFER_SIZE 512
 
 extern volatile int USART_CTRL_tx_busy;
 
@@ -18,6 +18,7 @@ int uart_recv(uint8_t *buf, int nbytes);
 void uart_send_char(uint8_t c);
 void uart_flush_input(void);
 void uart_flush_output(void);
+void uart_write(const char *msg, int n);
 
 #ifdef __cplusplus
 };

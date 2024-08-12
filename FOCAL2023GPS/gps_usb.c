@@ -273,6 +273,25 @@ void usb_ser_flush_input(void) {
   CRITICAL_SECTION_LEAVE()
 }
 
+int overflow = 0;
+
+/**
+ * Sends String Back to Host via USB, appending a newline and
+ * strobing the FTDI "Send Immediate" line. Every response
+ * should end by calling this function.
+ *
+ * @param    String to be sent back to Host via USB
+ * @return   None
+ *
+ */
+int usb_ser_write(const char *msg, int n) {
+  int nw = cdc_write(msg, n);
+  if (nw < n) {
+    overflow += n-nw;
+  }
+  return nw;
+}
+
 void usb_ser_send_char(uint8_t c) {
   cdc_write(&c, 1);
 }

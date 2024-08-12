@@ -308,8 +308,7 @@ static void parse_command(uint8_t *cmd) {
   }
 }
 
-#define RECV_BUF_SIZE 256
-static uint8_t cmd[RECV_BUF_SIZE];							// Current Command
+static uint8_t cmd[CTRL_RECV_BUF_SIZE];							// Current Command
 static int cmd_nc = 0;
 static int cmd_cp = 0;
 #ifdef CMD_RCV_TIMEOUT
@@ -325,7 +324,7 @@ static int cmd_cp = 0;
 *******************************************************************************/
 void poll_control(void) {
     int nr, i;
-    nr = ctrl_recv(&cmd[cmd_nc], RECV_BUF_SIZE-cmd_nc-1);
+    nr = ctrl_recv(&cmd[cmd_nc], CTRL_RECV_BUF_SIZE-cmd_nc-1);
     if (nr > 0) {
 #ifdef CMD_RCV_TIMEOUT
       if (cmd_nc == 0) cmd_rcv_timer = 0;
@@ -348,7 +347,7 @@ void poll_control(void) {
           break;
         }
       }
-      if (cmd_nc >= RECV_BUF_SIZE-1) {
+      if (cmd_nc >= CTRL_RECV_BUF_SIZE-1) {
         SendErrorMsg("8"); // Error code 8: Too many bytes before NL
         ctrl_flush_input();
         cmd_nc = 0;

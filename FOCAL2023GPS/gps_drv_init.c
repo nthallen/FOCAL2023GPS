@@ -16,6 +16,7 @@
 struct timer_descriptor TIMER_0;
 #endif
 
+#if 0
 /*! The buffer size for USART */
 #define USART_0_BUFFER_SIZE 16
 
@@ -61,6 +62,7 @@ void USART_0_init(void)
 	usart_async_init(&USART_0, SERCOM5, USART_0_buffer, USART_0_BUFFER_SIZE, (void *)NULL);
 	USART_0_PORT_init();
 }
+#endif
 
 #if 0
 /**
@@ -198,7 +200,7 @@ void system_init(void)
 {
 	init_mcu();
 
-	USART_0_init();
+	// USART_0_init();
 
 	// TIMER_0_init();
 	// USB_CTRL_init(); // moved to gps_usb.c sb_usb_reset()

@@ -20,6 +20,7 @@ extern subbus_driver_t sb_control;
 #define ctrl_send_char(c) uart_send_char(c)
 #define ctrl_flush_input() uart_flush_input()
 #define ctrl_flush_output() uart_flush_output()
+#define CTRL_RECV_BUF_SIZE USART_RX_BUFFER_SIZE
 #endif
 
 #ifdef CTRL_USB_SER
@@ -29,6 +30,7 @@ extern subbus_driver_t sb_control;
 #define ctrl_send_char(c) usb_ser_send_char(c)
 #define ctrl_flush_input() usb_ser_flush_input()
 #define ctrl_flush_output() usb_ser_flush_output()
+#define CTRL_RECV_BUF_SIZE CDC_INPUT_BUFFER_SIZE
 #endif
 
 #endif
