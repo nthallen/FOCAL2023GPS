@@ -113,7 +113,7 @@ static bool cdc_read_finished(const uint8_t ep, const enum usb_xfer_code rc, con
 }
 
 static void cdc_flush_output() {
-  if (!pending_write) {
+  if (!pending_write && output_length > 0) {
     pending_write = true;
     cdcdf_acm_write(output_buffer, output_length);
   }
@@ -244,7 +244,7 @@ void usb_ser_init(void) {
 }
 
 int usb_ser_recv(uint8_t *buf, int nbytes) {
-  if (output_length) return 0;
+  // if (output_length) return 0;
   if (nbytes > 0) {
     CRITICAL_SECTION_ENTER()
     if (nbytes > input_length) {
@@ -284,7 +284,7 @@ int overflow = 0;
  * @return   None
  *
  */
-int usb_ser_write(const char *msg, int n) {
+int usb_ser_write(const uint8_t *msg, int n) {
   int nw = cdc_write(msg, n);
   if (nw < n) {
     overflow += n-nw;

@@ -30,7 +30,7 @@ subbus_driver_t sb_usb;
 
 void usb_ser_init(void);
 int  usb_ser_recv(uint8_t *buf, int nbytes);
-int  usb_ser_write(const char *msg, int n);
+int  usb_ser_write(const uint8_t *msg, int n);
 void usb_ser_send_char(uint8_t c);
 void usb_ser_flush_input(void);
 void usb_ser_flush_output(void);

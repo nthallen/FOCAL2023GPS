@@ -18,7 +18,7 @@ int uart_recv(uint8_t *buf, int nbytes);
 void uart_send_char(uint8_t c);
 void uart_flush_input(void);
 void uart_flush_output(void);
-void uart_write(const char *msg, int n);
+void uart_write(const uint8_t *msg, int n);
 
 #ifdef __cplusplus
 };

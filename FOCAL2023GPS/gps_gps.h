@@ -8,6 +8,4 @@ subbus_driver_t sb_gps;
 #define GPS_RX_BUF_SIZE 1024
 #define USB_RX_BUF_SIZE 1024
 
-#define GPS_TEST_OUTPUT
-
 #endif

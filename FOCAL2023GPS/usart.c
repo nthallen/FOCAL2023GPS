@@ -100,7 +100,7 @@ void uart_send_char(uint8_t c) {
   if (nc_tx >= USART_TX_BUFFER_SIZE) {
     /* We can't be flushing, or nc_tx would be zero. Characters cannot be
        added to the buffer until _tx_busy is clear. */
-    assert(USART_0_tx_busy == 0,__FILE__,__LINE__);
+    while (USART_0_tx_busy) {}
     uart_flush_output();
   }
   while (USART_0_tx_busy) {}
@@ -124,7 +124,7 @@ void uart_flush_output(void) {
  * @return   None
  *
  */
-void uart_write(const char *msg, int n) {
+void uart_write(const uint8_t *msg, int n) {
   while (n-- > 0) {
     uart_send_char(*msg++);
   }
