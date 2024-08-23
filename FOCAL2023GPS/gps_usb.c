@@ -53,7 +53,11 @@ volatile bool usb_cdc_state_changed = false;
 static uint8_t input_buffer[CDC_INPUT_BUFFER_SIZE];
 static uint32_t input_length = 0;
 static uint8_t output_buffer[CDC_OUTPUT_BUFFER_SIZE];
-static uint32_t output_length = 0;
+static uint16_t obuf_nc; // total number of bytes in output_buffer
+static uint16_t obuf_written; // number of bytes that have been written
+static uint16_t saw_write_collision;
+static void cdc_flush_output();
+// static uint16_t obuf_pending; // number of bytes in current write request
 
 #if CONF_USBD_HS_SP
 static uint8_t single_desc_bytes[] = {
@@ -112,24 +116,20 @@ static bool cdc_read_finished(const uint8_t ep, const enum usb_xfer_code rc, con
   return rv;
 }
 
-static void cdc_flush_output() {
-  if (!pending_write && output_length > 0) {
-    pending_write = true;
-    cdcdf_acm_write(output_buffer, output_length);
-  }
-}
-
 static int32_t cdc_write(const uint8_t *const buf, const uint16_t length) {
   bool flush = false;
   uint16_t bytes_written = length;
+  if (obuf_nc) {
+    ++saw_write_collision;
+  }
   CRITICAL_SECTION_ENTER()
-  if (output_length+bytes_written > CDC_OUTPUT_BUFFER_SIZE) {
-    bytes_written = CDC_OUTPUT_BUFFER_SIZE - output_length;
+  if (obuf_nc+bytes_written > CDC_OUTPUT_BUFFER_SIZE) {
+    bytes_written = CDC_OUTPUT_BUFFER_SIZE - obuf_nc;
     flush = true;
   }
   for (int i = 0; i < bytes_written && cdc_connected; ++i) {
     char p = buf[i];
-    output_buffer[output_length++] = p;
+    output_buffer[obuf_nc++] = p;
     if (p == '\n') flush = true;
   }
   CRITICAL_SECTION_LEAVE()
@@ -139,21 +139,44 @@ static int32_t cdc_write(const uint8_t *const buf, const uint16_t length) {
   return bytes_written;
 }
 
+static void cdc_flush_output() {
+  int new_write = 0;
+  int obuf_pending = 0;
+  CRITICAL_SECTION_ENTER()
+  // obuf_written can change asynchronously, along with obuf_nc, but
+  // only if (pending_write).
+  // On the other hand, we call this function
+  // from cdc_write_finished(), which is called from in interrupt handler,
+  // but again, only if pending_write is true. In other words, if we
+  // get into this critical section and !pending_write is true, then
+  // even though we could be interrupted at the LEAVE(), that won't
+  // happen.
+  if (!pending_write && obuf_nc > obuf_written) {
+    pending_write = true;
+    new_write = 1;
+    obuf_pending = obuf_nc - obuf_written;
+  }
+  CRITICAL_SECTION_LEAVE()
+  if (new_write) {
+    cdcdf_acm_write(output_buffer+obuf_written, obuf_pending);
+  }
+}
+
 /**
  * \brief Callback invoked when bulk IN data (from device to host) has been transmitted
  */
 static bool cdc_write_finished(const uint8_t ep, const enum usb_xfer_code rc,
                                const uint32_t count) {
-  pending_write = false;
+  int still_writing = 0;
   CRITICAL_SECTION_ENTER()
-  if (count < output_length) {
-    output_length -= count;
-    memmove(&output_buffer[0], &output_buffer[count], output_length);
-  } else {
-    output_length = 0;
-  }
+  obuf_written += count;
+  obuf_nc -= obuf_written;
+  memmove(&output_buffer[0], &output_buffer[obuf_written], obuf_nc);
+  obuf_written = 0;
+  if (obuf_nc) still_writing = 1;
+  pending_write = false;
   CRITICAL_SECTION_LEAVE()
-  if (output_length) {
+  if (still_writing) {
     cdc_flush_output();
   }
 	/* No error. */
@@ -240,11 +263,12 @@ volatile int sb_acm_tx_busy = 0;
 void usb_ser_init(void) {
   // nc_tx = 0;
   input_length = 0;
-  output_length = 0;
+  obuf_nc = 0;
+  // obuf_pending = 0;
+  obuf_written = 0;
 }
 
 int usb_ser_recv(uint8_t *buf, int nbytes) {
-  // if (output_length) return 0;
   if (nbytes > 0) {
     CRITICAL_SECTION_ENTER()
     if (nbytes > input_length) {

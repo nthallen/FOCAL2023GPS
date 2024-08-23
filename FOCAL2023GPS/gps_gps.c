@@ -72,6 +72,7 @@ static void gps_poll() {
     }
     if (usb_to_write > usb_nw) {
       int nw = usb_ser_write(usb_rx_buf+usb_nw, usb_to_write-usb_nw);
+      uart_write(usb_rx_buf+usb_nw, usb_to_write-usb_nw);
       if (nw == usb_nc-usb_nw) {
         usb_nc = 0;
         usb_nw = 0;
